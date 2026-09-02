@@ -1,0 +1,76 @@
+### ANSIBLE - install nginx
+
+---
+- name: Install nginx on veer server
+  hosts: all
+  become: yes
+
+  tasks:
+    - name: install nginx
+      yum:
+        name: nginx
+	state: present
+
+
+### TERRAFORM - CREATE EC2 
+
+provider "aws" {
+  region = "ap-south-1"
+}
+
+resource "aws_instance" "veer_server" {
+  ami = "ami-2124qfufg"
+  instance_type = "c5.xlarge"
+
+  tags {
+    Name = "veerserver"
+
+  }
+}
+
+### kubernetes - create nginx pod
+apiVersion: v1
+kind: Pod
+metadata:
+  namespace: dev
+
+spec: 
+  containers:
+    - name: web
+      image: nginx:latest
+      ports:
+        - containerPort: 80
+### shell Script 
+
+echo "Date: $(date)"
+echo "Hostname: $(hostname)
+
+### jenkins 
+
+pipeline {
+    agent any 
+    stages {
+        stage('checkout') {
+	    steps {
+	        git branch: 'main', url: 'https://github.com/Pathnex/sample-java-app.git'
+	    }
+	}
+	stage('list files') {
+	    steps {
+	        sh 'ls -la'
+	    }
+	}
+    }
+}
+
+## gitlab 
+
+stages:
+  - checkout
+
+git-checkout:
+  stage: checkout
+  script:
+    - git clone https://github.com/Pathnex/sample-java-app.git
+    - cd sample-java-app
+    - ls -la
