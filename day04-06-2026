@@ -1,0 +1,94 @@
+### ansible 
+
+---
+- name: install tools
+  hosts: all
+  become: yes
+
+  tasks:
+    - name: install tools
+      yum:
+        name:
+	  - git
+	  - wget
+	state: present
+
+
+### terraform
+
+provider "aws" {
+  region = "ap-south-1"
+}
+
+resource "aws_key_pair" "my-key" {
+  key_name = "my-key"
+  public_key = "sshh_fiuhfquf"
+}
+resource "aws_instance" "myserver" {
+  ami = "ami-13223jbdav"
+  instance_type = "r5.xlarge"
+  key_name = aws_key_pair.my-key.key_name
+
+  tags = {
+    Name = "veerServer"
+  }
+
+
+#### kubernetes
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: veer-service
+spec:
+  selector:
+    app: veer-app
+
+  ports:
+    - port: 80
+      targetPort: 80
+
+### jenkins
+
+pipeline {
+    agent any
+    stages {
+        stage('Parallel Tasks') {
+            parallel {
+                stage('build') {
+                    steps {
+                        sh 'mvn clean compile'
+		    }
+		}
+		stage('test') {
+                    steps {
+                        sh 'mvn test'
+		    }
+		}
+	    }
+	}
+    }
+}
+
+
+### gitlab
+
+stages:
+  - build-test
+maven-build:
+  stage: build-test
+  image: maven:3.8.1-jdk-17
+  script:
+    - git clone https://github.com/pathnex/sample-java-app.git
+    - cd sample-java-app
+    - mvn clean compile
+  parallel: 1
+
+maven-test:
+  stage: build-test
+  image: maven:3.8.1-jdk-17
+  script:
+    - cd sample-java-app
+    - mvn test
+  parallel: 1
+
