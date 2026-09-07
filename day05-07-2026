@@ -1,0 +1,85 @@
+### ansible 
+
+---
+- name: manage nginx
+  hosts: all
+  become: yes
+
+  tasks:
+    - name: Update config file
+      copy:
+        src: index.html
+	dest: /usr/share/nginx/html/index.html
+      notify: Restart nginx
+
+  handlers:
+    - name: restart nginx
+      service:
+        name: nginx
+	state: restarted
+
+### terraform
+
+resource "aws_instance" "veerec2" {
+  ami  = "ami-0abcd1334255234"
+  instance_type = "c6a.12Xlarge"
+
+  user_data = <<EOF
+#!/bin/bash
+yum install -y httpd 
+systemctl start httd
+EOF
+
+### kubernetes
+
+apiVersion: v1
+kind: Pod
+metadata: 
+  name: veer-limited-pod
+spec:
+  containers:
+    - name: app
+      image: nginx
+      resource:
+        limits:
+	  memory: "256Mi"
+	  cpu: "500m"
+
+
+### jenkins
+
+pipeline {
+    agent any
+    environment {
+        INSTITUTE_NAME = "veer"
+    }
+    stages {
+        stage('Print') {
+            steps {
+                sh 'echo "welcome to $INSTITUTE_NAME Devops Training"'
+	    }
+	}
+	stage('build') {
+            steps {
+                sh 'mvn clean package -Dinstitute.name=$INSTITUTE_NAME'
+	    }
+	}
+    }
+}
+
+### gitlab
+
+stages:
+  - build
+
+variables:
+  INSTITUTE_NAME: "Pathnex"
+
+build:
+  stage: build
+  image: maven:3.8.1-jdk-17
+  script:
+    - git clone https://github.com/Pathnex/sample-java-app.git
+    - cd sample-java-app
+    - echo "Welcome to $INSTITUTE_NAME DevOps Training"
+    - mvn clean package -Dinstitute.name=$INSTITUTE_NAME
